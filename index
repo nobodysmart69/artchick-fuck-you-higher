@@ -1,0 +1,673 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Artchicks: Fuck You! Higher!</title>
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka+One&display=swap" rel="stylesheet">
+    <style>
+body {
+    background-color: #000;
+    color: #fff;
+    font-family: 'Fredoka One', sans-serif;
+    text-align: center;
+    text-shadow: 2px 2px 4px #f00;
+    margin: 0;
+    padding: 0;
+    overflow: hidden; /* Prevents scrollbars */
+    display: flex;
+    flex-direction: column; /* Ensures top elements stay above the game */
+    align-items: center;
+    height: 100vh;
+}
+
+/* 🔹 Title and Scorebar Stay Fixed at the Top */
+#title-container {
+    width: 100%;
+    padding: 10px 0;
+    background: transparent;
+    position: relative;
+    z-index: 10; /* Ensures it's always on top */
+}
+
+/* 🌟 Game Container: Stays Centered Below the Title */
+#gameContainer {
+    width: 80vmin;
+    height: 80vmin;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    overflow: hidden;
+    touch-action: manipulation;
+    box-sizing: border-box;
+    transform-origin: center;
+    margin-top: 10px; /* Adds space below title */
+}
+
+/* 🌟 Game Area: Stays Proportional and Centered */
+#gameArea {
+    width: 100%;
+    height: 100%;
+    position: relative;
+    background: url('images/art.png') no-repeat center center;
+    background-size: cover;
+    border: 2px solid #fff;
+    overflow: hidden;
+    transform-origin: center;
+}
+        @media (max-width: 768px) {
+            #gameContainer {
+                width: 95%;
+                height: 65vh;
+            }
+        }
+        @media (max-width: 480px) {
+            #gameContainer {
+                width: 100%;
+                height: 60vh;
+            }
+        }
+        @media (min-width: 1024px) {
+            #gameContainer {
+                width: 800px;
+                height: 600px;
+            }
+        }
+        #background-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            opacity: 0.3;
+            z-index: 1;
+            transition: background-color 1s;
+        }
+        #gameArea.damage {
+            background-color: rgba(255, 0, 0, 0.3);
+            transition: background-color 0.2s;
+        }
+        #player {
+    position: absolute;
+    bottom: 1vmin; /* Moves up slightly */
+    left: 50%;
+    width: 10vmin; /* Scales with screen */
+    height: 10vmin;
+    background-image: url('images/chick.png');
+    background-size: cover;
+    transform: translateX(-50%);
+    filter: drop-shadow(0 0 5px #0f0);
+    animation: pulse 2s infinite;
+    z-index: 10;
+}
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+        .enemy {
+    position: absolute;
+    transition: top 0.1s linear;
+    z-index: 5;
+    animation: bob 2s ease-in-out infinite;
+    overflow: hidden;
+}
+
+/* 🌟 Enemy Size Scaling */
+.enemy.kim { width: 10vmin; height: 10vmin; } 
+.enemy.grifters { width: 8vmin; height: 2vmin; } 
+.enemy.raj { width: 9vmin; height: 9vmin; } 
+.enemy.korean { width: 10vmin; height: 10vmin; filter: drop-shadow(0 0 5px #ff0); } 
+.enemy.Fud1 { width: 10vmin; height: 3vmin; } 
+.enemy.vcs2 { width: 10vmin; height: 4vmin; } 
+.enemy.default { width: 6vmin; height: 6vmin; } 
+.enemy.fast { width: 5vmin; height: 5vmin; filter: drop-shadow(0 0 5px #0ff); } 
+.enemy.tank { width: 9vmin; height: 9vmin; filter: drop-shadow(0 0 5px #f00); } 
+        .sineWave, .homing { }
+        @keyframes bob {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-5px); }
+        }
+        @keyframes explode {
+            0% { transform: scale(1); opacity: 1; }
+            100% { transform: scale(1.5); opacity: 0; }
+        }
+        .ghost { filter: drop-shadow(0 0 5px rgba(170,170,255,0.7)); }
+        .zombie { filter: drop-shadow(0 0 5px #f90); }
+        .heel {
+            position: absolute;
+            width: 25px;
+            height: 20px;
+            background-image: url('images/red_heel.png');
+            background-size: cover;
+            z-index: 10;
+        }
+        .gravestone {
+            position: absolute;
+            bottom: 0;
+            width: 40px;
+            height: 60px;
+            background: linear-gradient(135deg, #555 25%, #444 25%, #444 50%, #555 50%, #555 75%, #444 75%);
+            border-radius: 20px 20px 0 0;
+            box-shadow: 5px 5px 10px #000;
+            color: #222;
+            text-align: center;
+            line-height: 60px;
+            font-size: 12px;
+            font-weight: bold;
+            z-index: 2;
+        }
+
+        /* 🌟 Health Bar (Scales Proportionally) */
+#health-bar {
+    width: 30vmin; /* Adapts to screen size */
+    height: 4vmin;
+    border: 0.3vmin solid #fff;
+    position: relative;
+    margin: 2vh auto;
+    background-color: #333;
+}
+
+#health-level {
+    width: 100%;
+    height: 100%;
+    background-color: #0f0;
+    transition: width 0.5s;
+}
+
+/* 🌟 Game Over Screen (Responsive) */
+#game-over {
+    display: none;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 6vmin; /* Scales */
+    color: red;
+    z-index: 100;
+}
+
+.wave-popup {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: clamp(4vmin, 5vmin, 6vmin); /* Ensures scaling */
+    color: #ff0;
+    text-shadow: 2px 2px 4px #f00;
+    z-index: 20;
+    pointer-events: none;
+    animation: fadeInOut 2s ease-in-out;
+}
+
+.quote {
+    position: absolute;
+    top: 15%; /* Keeps it positioned properly */
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: clamp(2vmin, 2.5vmin, 2.2vmin); /* Scales between 2vmin and 3.5vmin */
+    color: white;
+    font-family: 'Fredoka One', sans-serif;
+    text-align: center;
+    z-index: 15;
+    pointer-events: none;
+    width: 80%;
+    max-width: 600px;
+    text-shadow: 2px 2px 4px #f00;
+}
+
+.wave-popup {
+    top: 50%;
+    font-size: 5vmin;
+    color: #ff0;
+    z-index: 20;
+    pointer-events: none;
+    animation: fadeInOut 2s ease-in-out;
+}
+
+/* 🌟 Mobile Adjustments */
+@media (max-width: 768px) {
+    h1 { font-size: 6vmin; }
+    p { font-size: 4vmin; }
+    #health-bar { width: 35vmin; height: 5vmin; }
+    .quote { font-size: 4vmin; }
+    .wave-popup { font-size: 6vmin; }
+}
+
+@media (max-width: 480px) {
+    h1 { font-size: 7vmin; }
+    p { font-size: 5vmin; }
+    #health-bar { width: 40vmin; height: 6vmin; }
+    .quote { font-size: 5vmin; }
+    .wave-popup { font-size: 7vmin; }
+}
+        }
+        @keyframes fadeInOut {
+            0% { opacity: 0; }
+            20% { opacity: 1; }
+            80% { opacity: 1; }
+            100% { opacity: 0; 
+        }
+    </style>
+</head>
+<body>
+    <h1>Artchicks: Fuck You! Higher!</h1>
+    <p>Wave: <span id="wave">1</span> | Score: <span id="score">0</span> | High Score: <span id="high-score">0</span></p>
+    <div id="health-bar">
+        <div id="health-level"></div>
+    </div>
+    <div id="gameContainer">
+        <div id="gameArea">
+            <div id="background-overlay"></div>
+            <div id="ground"></div>
+            <div id="player"></div>
+            <div id="game-over">Game Over<br><button id="restart">Restart</button></div>
+        </div>
+    </div>
+    <script>
+        const gameContainer = document.getElementById('gameContainer');
+        const gameArea = document.getElementById('gameArea');
+        const backgroundOverlay = document.getElementById('background-overlay');
+        const player = document.getElementById('player');
+        let playerX = 362.5;
+        const playerSpeed = 10;
+        let enemies = [];
+        let gravestones = [];
+        let score = 0;
+        let wave = 1;
+        let defeatedEnemies = 0;
+        const enemySpawnInterval = 2000;
+        let shooterHealth = 100;
+        const maxHealth = 100;
+        let isGameOver = false;
+        let scale = 1;
+
+        const funnyQuotes = [
+            "Got More Swag In My Pinky Finger Than Your Whole Influencer Cabal",
+            "Fuck You",
+            "Shit Paid KOL",
+            "Fuck You, Higher"
+        ];
+
+        function updateHealthBar() {
+            const healthLevel = document.getElementById('health-level');
+            healthLevel.style.width = (shooterHealth / maxHealth * 100) + '%';
+            if (shooterHealth <= 0) healthLevel.style.width = '0%';
+        }
+        updateHealthBar();
+
+        function updateHighScore() {
+            if (score > highScore) {
+                highScore = score;
+                localStorage.setItem('highScore', highScore);
+                document.getElementById('high-score').innerText = highScore;
+            }
+        }
+
+        function displayQuote(x, y) {
+            const quote = funnyQuotes[Math.floor(Math.random() * funnyQuotes.length)];
+            const quoteDiv = document.createElement('div');
+            quoteDiv.className = 'quote';
+            quoteDiv.innerText = quote;
+            quoteDiv.style.left = x + 'px';
+            quoteDiv.style.top = y + 'px';
+            gameArea.appendChild(quoteDiv);
+            setTimeout(() => {
+                if (quoteDiv.parentNode) gameArea.removeChild(quoteDiv);
+            }, 1000);
+        }
+
+        const gameWidth = 800;
+        const playerWidth = 75;
+
+        function resizeGame() {
+    const scaleX = gameContainer.clientWidth / 800;
+    const scaleY = gameContainer.clientHeight / 600;
+    scale = Math.min(scaleX, scaleY);
+    gameArea.style.transform = `scale(${scale})`;
+    gameArea.style.width = '800px';
+    gameArea.style.height = '600px';
+}
+        window.addEventListener('resize', resizeGame);
+        resizeGame();
+
+        const isTouchDevice = 'ontouchstart' in window;
+
+        gameArea.addEventListener('mousemove', (event) => {
+            if (isGameOver) return;
+            const rect = gameArea.getBoundingClientRect();
+            const mouseXRelative = (event.clientX - rect.left) / scale;
+            let desiredPlayerX = mouseXRelative - playerWidth / 2;
+            if (desiredPlayerX < 0) desiredPlayerX = 0;
+            else if (desiredPlayerX > gameWidth - playerWidth) desiredPlayerX = gameWidth - playerWidth;
+            playerX = desiredPlayerX;
+            player.style.left = playerX + 'px';
+        });
+
+        document.addEventListener('keydown', (event) => {
+            if (isGameOver) return;
+            if (event.key === 'a' || event.key === 'ArrowLeft') {
+                playerX -= playerSpeed;
+            } else if (event.key === 'd' || event.key === 'ArrowRight') {
+                playerX += playerSpeed;
+            }
+            if (playerX < 0) playerX = 0;
+            if (playerX > 725) playerX = 725;
+            player.style.left = playerX + 'px';
+        });
+
+        document.addEventListener('mousedown', (event) => {
+            if (isGameOver) return;
+            const heel = document.createElement('div');
+            heel.className = 'heel';
+            heel.style.left = (playerX + 27.5) + 'px';
+            heel.style.bottom = '75px';
+            gameArea.appendChild(heel);
+            moveHeel(heel);
+        });
+
+        if (isTouchDevice) {
+            gameArea.addEventListener('touchmove', (event) => {
+                event.preventDefault();
+                const touch = event.touches[0];
+                const rect = gameArea.getBoundingClientRect();
+                const touchX = (touch.clientX - rect.left) / scale;
+                let desiredPlayerX = touchX - playerWidth / 2;
+                if (desiredPlayerX < 0) desiredPlayerX = 0;
+                else if (desiredPlayerX > gameWidth - playerWidth) desiredPlayerX = gameWidth - playerWidth;
+                playerX = desiredPlayerX;
+                player.style.left = playerX + 'px';
+            }, { passive: false });
+
+            gameArea.addEventListener('touchstart', (event) => {
+                event.preventDefault();
+                if (isGameOver) return;
+                const heel = document.createElement('div');
+                heel.className = 'heel';
+                heel.style.left = (playerX + 27.5) + 'px';
+                heel.style.bottom = '75px';
+                gameArea.appendChild(heel);
+                moveHeel(heel);
+            }, { passive: false });
+        }
+
+        function moveHeel(heel) {
+            const heelInterval = setInterval(() => {
+                let heelY = parseInt(heel.style.bottom) || 0;
+                heelY += 10;
+                heel.style.bottom = heelY + 'px';
+                if (heelY > 600) {
+                    clearInterval(heelInterval);
+                    if (heel.parentNode) gameArea.removeChild(heel);
+                    return;
+                }
+                enemies.forEach((enemy, index) => {
+                    const computedStyle = getComputedStyle(enemy);
+                    const enemyWidth = parseInt(computedStyle.width);
+                    const enemyHeight = parseInt(computedStyle.height);
+                    const enemyX = parseInt(enemy.style.left) || 0;
+                    const enemyY = parseInt(enemy.style.top) || 0;
+                    const heelX = parseInt(heel.style.left) || 0;
+                    const heelBottom = parseInt(heel.style.bottom) || 0;
+                    const heelY = 600 - heelBottom;
+
+                    if (
+                        heelX >= enemyX &&
+                        heelX <= enemyX + enemyWidth &&
+                        heelY >= enemyY &&
+                        heelY <= enemyY + enemyHeight
+                    ) {
+                        enemy.health -= 1;
+                        enemy.style.filter += 'brightness(2)';
+                        setTimeout(() => {
+                            enemy.style.filter = enemy.style.filter.replace('brightness(2)', '');
+                        }, 100);
+                        if (enemy.health <= 0) {
+                            const enemyCenterX = enemyX + enemyWidth / 2;
+                            const enemyCenterY = enemyY + enemyHeight / 2;
+                            enemy.style.animation = 'explode 0.5s forwards';
+                            setTimeout(() => {
+                                if (enemy.parentNode) gameArea.removeChild(enemy);
+                            }, 500);
+                            enemies.splice(index, 1);
+                            score += 1;
+                            document.getElementById('score').innerText = score;
+                            defeatedEnemies += 1;
+                            displayQuote(enemyCenterX, enemyCenterY);
+                            if (defeatedEnemies % 10 === 0) {
+                                wave += 1;
+                                document.getElementById('wave').innerText = wave;
+                                const hue = (wave * 30) % 360;
+                                backgroundOverlay.style.backgroundColor = `hsl(${hue}, 50%, 50%)`;
+                                const wavePopup = document.createElement('div');
+                                wavePopup.className = 'wave-popup';
+                                wavePopup.innerText = `Wave ${wave}`;
+                                gameArea.appendChild(wavePopup);
+                                setTimeout(() => {
+                                    if (wavePopup.parentNode) gameArea.removeChild(wavePopup);
+                                }, 2000);
+                                if (wave % 5 === 0) spawnMiniBoss();
+                            }
+                        }
+                        clearInterval(heelInterval);
+                        if (heel.parentNode) gameArea.removeChild(heel);
+                    }
+                });
+            }, 50);
+        }
+
+        function createEnemy() {
+    if (isGameOver) return;
+    const enemy = document.createElement('div');
+    enemy.className = 'enemy';
+    const isGhost = Math.random() < 0.5;
+    const images = [
+        'images/korean.png',
+        'images/paidkol.png',
+        'images/solcoin.png',
+        'images/wanted.png',
+        'images/Fud1.png',
+        'images/Vcs2.png',
+        'images/kim.png',
+        'images/grifters.png',
+        'images/raj.png'
+    ];
+    const randomImage = images[Math.floor(Math.random() * images.length)];
+
+            const enemyType = Math.random();
+    if (enemyType < 0.33) {
+        enemy.classList.add('fast');
+        enemy.speed = 7;
+        enemy.health = 1;
+    } else if (enemyType < 0.66) {
+        enemy.classList.add('tank');
+        enemy.speed = 1;
+        enemy.health = 5;
+    } else {
+        enemy.classList.add(isGhost ? 'ghost' : 'zombie');
+        enemy.speed = isGhost ? 5 : 2;
+        enemy.health = isGhost ? 1 : 3;
+    }
+
+    if (randomImage === 'images/kim.png') {
+        enemy.classList.add('kim');
+        enemy.style.width = '85px';
+        enemy.style.height = '80px';
+        enemy.style.left = Math.random() * 740 + 'px';
+    } else if (randomImage === 'images/grifters.png') {
+        enemy.classList.add('grifters');
+        enemy.style.width = '65px';
+        enemy.style.height = '10px';
+        enemy.style.left = Math.random() * 735 + 'px';
+    } else if (randomImage === 'images/Fud1.png') {
+        enemy.classList.add('Fud1');
+        enemy.style.width = '75px';
+        enemy.style.height = '20px';
+        enemy.style.left = Math.random() * 750 + 'px';
+    } else if (randomImage === 'images/Vcs2.png') {
+        enemy.classList.add('vcs2');
+        enemy.style.width = '75px';
+        enemy.style.height = '24px';
+        enemy.style.left = Math.random() * 755 + 'px';
+    } else if (randomImage === 'images/korean.png') {
+        enemy.classList.add('korean');
+        enemy.style.width = '85px';
+        enemy.style.height = '80px';
+        enemy.style.left = Math.floor(Math.random() * (790 - 85)) + 'px';
+    } else if (randomImage === 'images/raj.png') {
+        enemy.classList.add('raj');
+        enemy.style.width = '75px';
+        enemy.style.height = '75px';
+        enemy.style.left = Math.floor(Math.random() * (796 - 75)) + 'px';
+    } else {
+        enemy.classList.add('default');
+        enemy.style.width = '50px';
+        enemy.style.height = '50px';
+        enemy.style.left = Math.random() * 750 + 'px';
+    }
+
+            const imgElement = document.createElement('img');
+    imgElement.src = randomImage;
+    imgElement.style.width = '100%';
+    imgElement.style.height = '100%';
+    imgElement.style.objectFit = 'contain';
+    enemy.appendChild(imgElement);
+
+    imgElement.onerror = () => {
+        enemy.style.backgroundColor = '#f00';
+        imgElement.remove();
+        enemy.innerText = 'X';
+    };
+
+    const movementType = Math.random();
+    if (movementType < 0.33) {
+        enemy.classList.add('sineWave');
+        enemy.angle = Math.random() * Math.PI * 2;
+    } else if (movementType < 0.66) {
+        enemy.classList.add('homing');
+    }
+    enemy.style.top = '0px';
+    gameArea.appendChild(enemy);
+    enemies.push(enemy);
+}
+
+        function gameLoop() {
+            if (!isGameOver) {
+                moveEnemies();
+                requestAnimationFrame(gameLoop);
+            }
+        }
+        requestAnimationFrame(gameLoop);
+
+        function moveEnemies() {
+            for (let i = enemies.length - 1; i >= 0; i--) {
+                const enemy = enemies[i];
+                let enemyY = parseInt(enemy.style.top) || 0;
+                let enemyX = parseInt(enemy.style.left) || 0;
+                const enemyWidth = parseInt(getComputedStyle(enemy).width);
+                const enemyHeight = parseInt(getComputedStyle(enemy).height);
+
+                if (enemy.classList.contains('sineWave')) {
+                    enemy.angle = (enemy.angle || 0) + 0.1;
+                    enemyX += Math.sin(enemy.angle) * 5;
+                    if (enemyX < 0) enemyX = 0;
+                    if (enemyX > 800 - enemyWidth) enemyX = 800 - enemyWidth;
+                } else if (enemy.classList.contains('homing')) {
+                    if (enemyX + enemyWidth / 2 < playerX + 37.5) enemyX += 1;
+                    else if (enemyX + enemyWidth / 2 > playerX + 37.5) enemyX -= 1;
+                }
+                enemyY += enemy.speed;
+                enemy.style.top = enemyY + 'px';
+                enemy.style.left = enemyX + 'px';
+
+                const enemyLeft = enemyX;
+                const enemyRight = enemyX + enemyWidth;
+                const enemyTop = enemyY;
+                const enemyBottom = enemyY + enemyHeight;
+                const playerLeft = playerX;
+                const playerRight = playerX + 75;
+                const playerTop = 525;
+                const playerBottom = 590;
+
+                if (!isGameOver &&
+                    enemyRight > playerLeft &&
+                    enemyLeft < playerRight &&
+                    enemyBottom > playerTop &&
+                    enemyTop < playerBottom
+                ) {
+                    shooterHealth -= 10;
+                    gameArea.classList.add('damage');
+                    setTimeout(() => gameArea.classList.remove('damage'), 200);
+                    updateHealthBar();
+                    if (shooterHealth <= 0) {
+                        isGameOver = true;
+                        updateHighScore();
+                        document.getElementById('game-over').style.display = 'block';
+                    }
+                    gameArea.removeChild(enemy);
+                    enemies.splice(i, 1);
+                } else if (enemyY > (600 - enemyHeight)) {
+                    gameArea.removeChild(enemy);
+                    enemies.splice(i, 1);
+                }
+            }
+        }
+
+        setInterval(createEnemy, enemySpawnInterval);
+
+        function createGravestone() {
+            const stone = document.createElement('div');
+            stone.className = 'gravestone';
+            stone.style.left = Math.random() * 760 + 'px';
+            stone.innerText = 'RIP';
+            gameArea.appendChild(stone);
+            gravestones.push(stone);
+        }
+
+        for (let i = 0; i < 3; i++) {
+            createGravestone();
+        }
+
+        function spawnMiniBoss() {
+            if (isGameOver) return;
+            const boss = document.createElement('div');
+            boss.className = 'enemy';
+            boss.style.width = '60px';
+            boss.style.height = '60px';
+            const bossImg = document.createElement('img');
+            bossImg.src = 'images/mini-boss.png';
+            bossImg.style.width = '100%';
+            bossImg.style.height = '100%';
+            bossImg.style.objectFit = 'contain';
+            boss.appendChild(bossImg);
+            boss.health = 10;
+            boss.speed = 3;
+            boss.style.left = '370px';
+            boss.style.top = '0px';
+            gameArea.appendChild(boss);
+            enemies.push(boss);
+            bossImg.onerror = () => {
+                boss.style.backgroundColor = '#f00';
+                bossImg.remove();
+                boss.innerText = 'X';
+            };
+        }
+
+        document.getElementById('restart').addEventListener('click', () => {
+            shooterHealth = 100;
+            score = 0;
+            wave = 1;
+            defeatedEnemies = 0;
+            isGameOver = false;
+            document.getElementById('score').innerText = score;
+            document.getElementById('wave').innerText = wave;
+            updateHealthBar();
+            updateHighScore();
+            document.getElementById('game-over').style.display = 'none';
+            enemies.forEach(enemy => { if (enemy.parentNode) gameArea.removeChild(enemy); });
+            enemies = [];
+            backgroundOverlay.style.backgroundColor = 'transparent';
+            requestAnimationFrame(gameLoop);
+        });
+    </script>
+</body>
+</html>
